@@ -1,5 +1,6 @@
 assignments = []
 
+# Assume every sudoku board is grid of 9x9 boxes
 rows = 'ABCDEFGHI'
 cols = '123456789'
 boxes = cross(rows, cols)
@@ -9,6 +10,9 @@ column_units = [cross(rows, c) for c in cols]
 square_units = [cross(rs, cs) for rs in ('ABC','DEF','GHI') for cs in ('123','456','789')]
 diag1_units = ['A1', 'B2', 'C3', 'D4', 'E5', 'F6', 'G7', 'H8', 'I9']
 diag2_units = ['A9', 'B8', 'C7', 'D6', 'E5', 'F4', 'G3', 'H2', 'I1']
+
+
+#unitlist = row_units + column_units + square_units
 unitlist = row_units + column_units + square_units + diag1_units + diag2_units
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
@@ -28,13 +32,20 @@ def naked_twins(values):
     """Eliminate values using the naked twins strategy.
     Args:
         values(dict): a dictionary of the form {'box_name': '123456789', ...}
-
     Returns:
         the values dictionary with the naked twins eliminated from peers.
     """
 
     # Find all instances of naked twins
     # Eliminate the naked twins as possibilities for their peers
+    
+    for key in values:
+        if len(values[key])==2:
+            dataval = values[key]
+            for px in peers[key]:
+                values[px] = values[px].replace(dataval, '')
+    
+    return values
 
 def cross(A, B):
     "Cross product of elements in A and elements in B."
@@ -133,10 +144,38 @@ def reduce_puzzle(values):
         if len([box for box in values.keys() if len(values[box]) == 0]):
             return False
     return values
-    pass
+    #pass
 
 def search(values):
-    pass
+    
+    #  copied from code in exerciese
+    
+    values = reduce_puzzle(values)
+    if values is False:
+        return False ## Failed earlier
+    if all(len(values[s]) == 1 for s in boxes): 
+        return values ## Solved!
+
+
+    n,s = min((len(values[s]), s) for s in boxes if len(values[s]) > 1)
+    #print(n)
+    #print(s)
+    
+    for value in values[s]:
+        #print(values[s])
+        new_sudoku = values.copy()
+        #print(new_sudoku)
+        new_sudoku[s] = value
+        attempt = search(new_sudoku)
+        #print("attempt is  ", attempt)
+        #break
+        if attempt:
+            #display(attempt)
+            #values = attempt
+            return attempt
+    
+    
+    #pass
 
 def solve(grid):
     """
@@ -159,4 +198,4 @@ if __name__ == '__main__':
     except SystemExit:
         pass
     except:
-        print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
+print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')

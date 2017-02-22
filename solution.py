@@ -1,6 +1,15 @@
 assignments = []
 
+#  Moved code here as need to use from here on
+def cross(A, B):
+    "Cross product of elements in A and elements in B."
+    return [s+t for s in A for t in B]
+    #pass
+
+
+
 # Assume every sudoku board is grid of 9x9 boxes
+#  Most code copied from course lesson
 rows = 'ABCDEFGHI'
 cols = '123456789'
 boxes = cross(rows, cols)
@@ -8,11 +17,13 @@ boxes = cross(rows, cols)
 row_units = [cross(r, cols) for r in rows]
 column_units = [cross(rows, c) for c in cols]
 square_units = [cross(rs, cs) for rs in ('ABC','DEF','GHI') for cs in ('123','456','789')]
-diag1_units = ['A1', 'B2', 'C3', 'D4', 'E5', 'F6', 'G7', 'H8', 'I9']
-diag2_units = ['A9', 'B8', 'C7', 'D6', 'E5', 'F4', 'G3', 'H2', 'I1']
+#  manually defined the diagonal units as additional sets of units
+#  define as list of list, even though it is 1 list of list, to be consistent with row_units, column_units, square_units
+diag1_units = [['A1', 'B2', 'C3', 'D4', 'E5', 'F6', 'G7', 'H8', 'I9']]
+diag2_units = [['A9', 'B8', 'C7', 'D6', 'E5', 'F4', 'G3', 'H2', 'I1']]
 
 
-#unitlist = row_units + column_units + square_units
+#  Now define the unitlist, unit dictionary (for each box), peer dictionary (for each box) accordingly for a diagonal sudoku
 unitlist = row_units + column_units + square_units + diag1_units + diag2_units
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
@@ -39,18 +50,32 @@ def naked_twins(values):
     # Find all instances of naked twins
     # Eliminate the naked twins as possibilities for their peers
     
-    for key in values:
-        if len(values[key])==2:
-            dataval = values[key]
-            for px in peers[key]:
-                values[px] = values[px].replace(dataval, '')
-    
+    #  First create a reverse dictionary
+    for unit in unitlist:
+        revdict = {}
+        for key in unit:
+            val = values[key]
+            if val not in revdict:
+                revdict[val] = [key]
+            else:
+                revdict[val].append(key)
+
+        #  list of lists for all the twin pairs, but should really only have 1 twin pair
+        #   as going through each row_unit, column_unit, square_unit
+        twinboxes = [vals for keyk, vals in revdict.items() if ((len(vals) == 2) and (len(keyk)==2))]
+        #print("twinboxes ", twinboxes)
+        
+        
+        for tpair in twinboxes:
+            #print("tpair ", tpair)
+            punits = sorted(set(unit) - set(tpair))
+            #print("punits ", punits)
+            
+            for digit in values[tpair[0]]:
+                for pbox in punits:
+                    values[pbox] = values[pbox].replace(digit, '')
     return values
 
-def cross(A, B):
-    "Cross product of elements in A and elements in B."
-    return [s+t for s in A for t in B]
-    pass
 
 def grid_values(grid):
     """
@@ -128,6 +153,7 @@ def reduce_puzzle(values):
 
         eliminate(values)
         only_choice(values)
+        naked_twins(values)
         
         # Check how many boxes have a determined value, to compare
         solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
@@ -186,6 +212,11 @@ def solve(grid):
     Returns:
         The dictionary representation of the final sudoku grid. False if no solution exists.
     """
+    gridv = grid_values(grid)
+    gridv = search(gridv)
+    return gridv
+    
+    
 
 if __name__ == '__main__':
     diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
@@ -198,4 +229,4 @@ if __name__ == '__main__':
     except SystemExit:
         pass
     except:
-print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
+        print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')

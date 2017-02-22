@@ -9,7 +9,7 @@ def cross(A, B):
 
 
 # Assume every sudoku board is grid of 9x9 boxes
-#  Most code copied from course lesson
+#  Heaps of code copied from course lesson
 rows = 'ABCDEFGHI'
 cols = '123456789'
 boxes = cross(rows, cols)
@@ -59,18 +59,20 @@ def naked_twins(values):
                 revdict[val] = [key]
             else:
                 revdict[val].append(key)
-
+                
+        #  The reverse dictionary will allow count of unique contents of each box in the row, column, square, or diagonal
+        #   If can find condition where there are 2 boxes with same contents, and the length of contents are 2,
+        #     considered to have found our naked twin pairs
         #  list of lists for all the twin pairs, but should really only have 1 twin pair
         #   as going through each row_unit, column_unit, square_unit
         twinboxes = [vals for keyk, vals in revdict.items() if ((len(vals) == 2) and (len(keyk)==2))]
-        #print("twinboxes ", twinboxes)
         
-        
+        #  now need to set the other boxes in the row, column, square, or diagonal to not have values of the naked twins.
         for tpair in twinboxes:
-            #print("tpair ", tpair)
+            #  need to remove the naked twins boxes, so they don't get modified
             punits = sorted(set(unit) - set(tpair))
-            #print("punits ", punits)
-            
+            #  going to assume that first contents same as 2nd contents in tpair
+            #   tpair is list from the list of list at twinboxes
             for digit in values[tpair[0]]:
                 for pbox in punits:
                     values[pbox] = values[pbox].replace(digit, '')
@@ -91,16 +93,13 @@ def grid_values(grid):
     
     if len(grid) != 81:
         return False
-            
     
     newval = []
-    
     for c in grid:
         if c == '.':
             newval.append('123456789')
         else:
             newval.append(c)
-    
     sdict = dict(zip(boxes, newval))
     return sdict
     
@@ -161,11 +160,6 @@ def reduce_puzzle(values):
         # If no new values were added, stop the loop.
         stalled = solved_values_before == solved_values_after
         
-#        if solved_values_after == len(values):
-#            return values
-#            if stalled:
-#                return values
-
         # Sanity check, return False if there is a box with zero available values:
         if len([box for box in values.keys() if len(values[box]) == 0]):
             return False
@@ -174,7 +168,7 @@ def reduce_puzzle(values):
 
 def search(values):
     
-    #  copied from code in exerciese
+    #  copied from code in exercise lesson
     
     values = reduce_puzzle(values)
     if values is False:
@@ -186,18 +180,11 @@ def search(values):
     n,s = min((len(values[s]), s) for s in boxes if len(values[s]) > 1)
     #print(n)
     #print(s)
-    
     for value in values[s]:
-        #print(values[s])
         new_sudoku = values.copy()
-        #print(new_sudoku)
         new_sudoku[s] = value
         attempt = search(new_sudoku)
-        #print("attempt is  ", attempt)
-        #break
         if attempt:
-            #display(attempt)
-            #values = attempt
             return attempt
     
     
@@ -213,8 +200,12 @@ def solve(grid):
         The dictionary representation of the final sudoku grid. False if no solution exists.
     """
     gridv = grid_values(grid)
+    #  rely on the search function to return a false value if sudoku cannot be solved, or flaw in programming
     gridv = search(gridv)
-    return gridv
+    if gridv:
+        return gridv
+    else:
+        return false
     
     
 
